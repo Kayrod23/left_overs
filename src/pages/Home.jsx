@@ -6,51 +6,48 @@ import {OPENAI_API_KEY} from "@env";
 import {IMGBB_API} from "@env";
 import {BACKEND} from "@env"
 
-
 const openai = new OpenAI({
   apiKey: OPENAI_API_KEY,
   dangerouslyAllowBrowser: true,
 });
 // console.log(openai);
 
-
 function Home () {
+  const [imageUrl, setImageUrl] = useState("");
   const [message, setMessage] = useState("");
   const [recipeSteps, setRecipeSteps] = useState("");
 
-  useEffect(() => {
-    async function imageTest () {
-      const response = await openai.chat.completions.create({
-        model: "gpt-4-vision-preview",
-        messages: [
-          {
-            role: "user",
-            content: [
-              { type: "text", text: "Generate a recipe, list recipe name only" },
-              {
-                type: "image_url",
-                image_url: {
-                  "url": "https://static9.depositphotos.com/1228594/1079/i/450/depositphotos_10795872-stock-photo-milkbutter-and-eggs-as-dairy.jpg",
-                },
-              },
-            ],
-          },
-        ],
-      });
-      console.log(response.choices[0].message.content);
-      setMessage(response.choices[0].message.content);
-      // send this to the back end along with the steps when completed
-    }
-    //imageTest();
-  }, [])
+  // useEffect(() => {
+  //   async function imageTest () {
+  //     const response = await openai.chat.completions.create({
+  //       model: "gpt-4-vision-preview",
+  //       messages: [
+  //         {
+  //           role: "user",
+  //           content: [
+  //             { type: "text", text: "Generate a recipe, list recipe name only" },
+  //             {
+  //               type: "image_url",
+  //               image_url: {
+  //                 "url": "https://static9.depositphotos.com/1228594/1079/i/450/depositphotos_10795872-stock-photo-milkbutter-and-eggs-as-dairy.jpg",
+  //               },
+  //             },
+  //           ],
+  //         },
+  //       ],
+  //     });
+  //     console.log(response.choices[0].message.content);
+  //     setMessage(response.choices[0].message.content);
+  //     // send this to the back end along with the steps when completed
+  //   }
+  //   //imageTest();
+  // }, [])
+
+  // takeImageInput takes an image file from your computer and send it to imgbb to be hosted so the image now has a url linked to it.
+  // this allows it to be sent to chatgpt and analyzed to create a recipe.
   function takeImageInput(event) {
     event.preventDefault();
-    const fileInput = document.getElementById('file');
-    const file = fileInput.files[0];
-    // console.log("here",file)
     const form = new FormData(event.target);
-    form.append("image", file);
-    console.log("form",form)
     fetch(`https://api.imgbb.com/1/upload?expiration=600&key=${IMGBB_API}`, {
       method: 'POST',
       body: form,
@@ -59,31 +56,16 @@ function Home () {
         if (!response.ok) {
           throw new Error(`HTTP error! Status: ${response.status}`);
         }
-        return response.json(); // Parse the response as JSON
+        return response.json();
       })
       .then(data => {
-        console.log(data);
-  
-        // Access specific information from the response
-        const imageUrl = data.data.url;
-        const deletionUrl = data.data.delete_url;
-  
-        // Use the information as needed
-        console.log('Image URL:', imageUrl);
-        console.log('Deletion URL:', deletionUrl);
-  
-        // Further processing or updating the state can be done here
+        setImageUrl(data.data.url)
       })
       .catch(error => {
         console.error('Error uploading image:', error);
-        // Handle errors
       });
   }
-    // for (const entry of form.entries()) {
-    //   console.log(entry[1]);
-    //   // console.log(form.files[0])
-    // }
-
+  console.log(imageUrl);
   // useEffect(() => {
 
   // }, [])

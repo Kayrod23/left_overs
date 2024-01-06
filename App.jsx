@@ -1,5 +1,5 @@
-import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View } from 'react-native';
+// import { StatusBar } from 'expo-status-bar';
+// import { StyleSheet, Text, View } from 'react-native';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import Home from "./src/pages/Home.jsx";
 import Inventory from "./src/pages/Inventory.jsx";
