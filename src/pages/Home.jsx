@@ -63,7 +63,6 @@ function Home () {
       });
 
       //run showChatGPTUserImage() if imageUrl is updated
-      console.log("here", imageUrl)
       // if (imageUrl) {
       //   // useEffect(() => {
       //     console.log(1)
