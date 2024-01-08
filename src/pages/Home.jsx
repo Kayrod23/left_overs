@@ -15,13 +15,14 @@ const openai = new OpenAI({
 function Home () {
   // let loading = false;
   const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState("");
-  const [recipeSteps, setRecipeSteps] = useState("Here");
+  const [message, setMessage] = useState("here");
+  const [recipeSteps, setRecipeSteps] = useState("");
   // takeImageInput takes an image file from your computer and send it to imgbb to be hosted so the image now has a url linked to it.
   // this allows it to be sent to chatgpt and analyzed to create a recipe.
   function takeImageInputAndSendToOpenAI(event) {
     event.preventDefault();
     setLoading(true);
+    console.log("running");
     // loading = true;
     const form = new FormData(event.target);
     fetch(`https://api.imgbb.com/1/upload?expiration=600&key=${IMGBB_API}`, {
@@ -36,36 +37,14 @@ function Home () {
       })
       .then(data => {
         showChatGPTUserImage(data.data.url);
-      //   async function imageTest () {
-      //     const response = await openai.chat.completions.create({
-      //       model: "gpt-4-vision-preview",
-      //       messages: [
-      //         {
-      //           role: "user",
-      //           content: [
-      //             { type: "text", text: "Generate a recipe, list recipe name only" },
-      //             {
-      //               type: "image_url",
-      //               image_url: {
-      //                 "url": `${data.data.url}`,
-      //               },
-      //             },
-      //           ],
-      //         },
-      //       ],
-      //     });
-      //     console.log(response.choices[0].message.content);
-      //     setMessage(response.choices[0].message.content);
-      //     // send this to the back end along with the steps when completed
-      //   }
-      //   // imageTest();
-      // })
+        // getRecipeFromChatGPT("fresh tomato salsa");
       })
       .catch(error => {
         console.error('Error uploading image:', error);
       });
     }
-      //run showChatGPTUserImage() if imageUrl is updated
+
+//run showChatGPTUserImage() if imageUrl is updated
       async function showChatGPTUserImage (imageUrl) {
         const response = await openai.chat.completions.create({
           model: "gpt-4-vision-preview",
@@ -85,14 +64,28 @@ function Home () {
           ],
         });
         setMessage(response.choices[0].message.content);
+        getRecipeFromChatGPT(response.choices[0].message.content);
         // send this to the back end along with the steps when completed
       }
-      // imageTest();
-  // console.log(imageUrl);
-  console.log(message);
-  // if (message && recipeSteps) {
-  //   loading = false;
-  // }
+
+// sends the recipe generated from chatGPT and send it back to then get a step by step guide on how to make the recipe.
+      async function getRecipeFromChatGPT(recipe) {
+        const recipeSteps = await openai.chat.completions.create({
+          messages: [{"role": "system", "content": "you are a helpful assistant" },
+        {"role" : "user", "content" : `can you give me a step by step guide for ${recipe}`}],
+        model: "gpt-3.5-turbo",
+        // stream: true
+        })
+      //   for await (const chunk of recipeSteps) {
+      //     setRecipeSteps(chunk.choices[0]?.delta?.content || "");
+      // }
+        setRecipeSteps(recipeSteps.choices[0].message.content);
+        setLoading(false);
+      }
+
+
+  console.log("state",message);
+  console.log("state", recipeSteps);
   return (
     <div style={styles.container}>
       <NavBar/>
@@ -108,8 +101,8 @@ function Home () {
         <div>
           { message && recipeSteps ? 
             <div>
-              <h2 style={styles.recipe}>{message ? message : "Recipe Name"}</h2>
-              <p style={styles.recipeSteps}>{recipeSteps ? recipeSteps : "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur."}</p>
+              <h2 style={styles.recipe}>{message}</h2>
+              <p style={styles.recipeSteps}>{recipeSteps}</p>
             </div>
             :
             <div>What do you have left over?</div>
