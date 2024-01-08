@@ -13,14 +13,16 @@ const openai = new OpenAI({
 // console.log(openai);
 
 function Home () {
-  // const [imageUrl, setImageUrl] = useState("");
+  // let loading = false;
+  const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
-  const [recipeSteps, setRecipeSteps] = useState("");
-
+  const [recipeSteps, setRecipeSteps] = useState("Here");
   // takeImageInput takes an image file from your computer and send it to imgbb to be hosted so the image now has a url linked to it.
   // this allows it to be sent to chatgpt and analyzed to create a recipe.
   function takeImageInputAndSendToOpenAI(event) {
     event.preventDefault();
+    setLoading(true);
+    // loading = true;
     const form = new FormData(event.target);
     fetch(`https://api.imgbb.com/1/upload?expiration=600&key=${IMGBB_API}`, {
       method: 'POST',
@@ -33,84 +35,88 @@ function Home () {
         return response.json();
       })
       .then(data => {
-        async function imageTest (imageUrl) {
-          console.log(2)
-          const response = await openai.chat.completions.create({
-            model: "gpt-4-vision-preview",
-            messages: [
-              {
-                role: "user",
-                content: [
-                  { type: "text", text: "Generate a recipe, list recipe name only" },
-                  {
-                    type: "image_url",
-                    image_url: {
-                      "url": `${data.data.url}`,
-                    },
-                  },
-                ],
-              },
-            ],
-          });
-          console.log(response.choices[0].message.content);
-          setMessage(response.choices[0].message.content);
-          // send this to the back end along with the steps when completed
-        }
-        imageTest();
+        showChatGPTUserImage(data.data.url);
+      //   async function imageTest () {
+      //     const response = await openai.chat.completions.create({
+      //       model: "gpt-4-vision-preview",
+      //       messages: [
+      //         {
+      //           role: "user",
+      //           content: [
+      //             { type: "text", text: "Generate a recipe, list recipe name only" },
+      //             {
+      //               type: "image_url",
+      //               image_url: {
+      //                 "url": `${data.data.url}`,
+      //               },
+      //             },
+      //           ],
+      //         },
+      //       ],
+      //     });
+      //     console.log(response.choices[0].message.content);
+      //     setMessage(response.choices[0].message.content);
+      //     // send this to the back end along with the steps when completed
+      //   }
+      //   // imageTest();
+      // })
       })
       .catch(error => {
         console.error('Error uploading image:', error);
       });
-
+    }
       //run showChatGPTUserImage() if imageUrl is updated
-      // if (imageUrl) {
-      //   // useEffect(() => {
-      //     console.log(1)
-      //     async function imageTest (imageUrl) {
-      //       console.log(2)
-      //       const response = await openai.chat.completions.create({
-      //         model: "gpt-4-vision-preview",
-      //         messages: [
-      //           {
-      //             role: "user",
-      //             content: [
-      //               { type: "text", text: "Generate a recipe, list recipe name only" },
-      //               {
-      //                 type: "image_url",
-      //                 image_url: {
-      //                   "url": `${imageUrl}`,
-      //                 },
-      //               },
-      //             ],
-      //           },
-      //         ],
-      //       });
-      //       console.log(response.choices[0].message.content);
-      //       setMessage(response.choices[0].message.content);
-      //       // send this to the back end along with the steps when completed
-      //     }
-      //     imageTest();
-      //   // }, [])
-      //}
-  }
-
+      async function showChatGPTUserImage (imageUrl) {
+        const response = await openai.chat.completions.create({
+          model: "gpt-4-vision-preview",
+          messages: [
+            {
+              role: "user",
+              content: [
+                { type: "text", text: "Generate a recipe, list recipe name only" },
+                {
+                  type: "image_url",
+                  image_url: {
+                    "url": `${imageUrl}`,
+                  },
+                },
+              ],
+            },
+          ],
+        });
+        setMessage(response.choices[0].message.content);
+        // send this to the back end along with the steps when completed
+      }
+      // imageTest();
   // console.log(imageUrl);
   console.log(message);
+  // if (message && recipeSteps) {
+  //   loading = false;
+  // }
   return (
     <div style={styles.container}>
       <NavBar/>
-      { message ? 
       <div>
-        <h2 style={styles.recipe}>{message ? message : "Recipe Name"}</h2>
-        <p style={styles.recipeSteps}>{recipeSteps ? recipeSteps : "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur."}</p>
-      </div>
-      : 
-        <form style={styles.form} onSubmit={takeImageInputAndSendToOpenAI}>
+         <form style={styles.form} onSubmit={takeImageInputAndSendToOpenAI}>
           {/* <label htmlFor='file'>Image</label> */}
           <input id="file" type="file" accept="image/*" capture="camera" name="image"/>
           <button type="submit">Submit</button>
         </form>
-      }
+        { loading ? 
+        <div>Loading</div>
+        :
+        <div>
+          { message && recipeSteps ? 
+            <div>
+              <h2 style={styles.recipe}>{message ? message : "Recipe Name"}</h2>
+              <p style={styles.recipeSteps}>{recipeSteps ? recipeSteps : "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur."}</p>
+            </div>
+            :
+            <div>What do you have left over?</div>
+          }
+        </div>
+        }
+      </div>
     </div>
   )
 }
